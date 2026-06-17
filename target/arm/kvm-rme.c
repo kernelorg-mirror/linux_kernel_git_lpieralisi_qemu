@@ -27,6 +27,24 @@
 #if !defined(KVM_ARM_VCPU_REC)
 #define KVM_ARM_VCPU_REC        9 /* VCPU REC state as part of Realm */
 #endif
+
+#if !defined(KVM_VM_TYPE_ARM_NORMAL)
+/*
+ * On arm64, machine type can be used to request both the machine type and
+ * the physical address size for the VM.
+ *
+ * Bits[11-8] are reserved for the ARM specific machine type.
+ *
+ * Bits[7-0] are reserved for the guest PA size shift (i.e, log2(PA_Size)).
+ * For backward compatibility, value 0 implies the default IPA size, 40bits.
+ */
+#define KVM_VM_TYPE_ARM_SHIFT          8
+#define KVM_VM_TYPE_ARM_MASK           (0xfULL << KVM_VM_TYPE_ARM_SHIFT)
+#define KVM_VM_TYPE_ARM(_type)         \
+       (((_type) << KVM_VM_TYPE_ARM_SHIFT) & KVM_VM_TYPE_ARM_MASK)
+#define KVM_VM_TYPE_ARM_NORMAL         KVM_VM_TYPE_ARM(0)
+#define KVM_VM_TYPE_ARM_REALM          KVM_VM_TYPE_ARM(1)
+#endif
 /* ** TEMPORARY LOCATION ENDS ** */
 
 #define TYPE_RME_GUEST "rme-guest"
@@ -104,4 +122,12 @@ void kvm_arm_rme_vcpu_init(ARMCPU *cpu)
 
     cpu->kvm_rme = true;
     cpu->kvm_init_features[0] |= (1 << KVM_ARM_VCPU_REC);
+}
+
+int kvm_arm_rme_vm_type(void)
+{
+    if (rme_guest) {
+        return KVM_VM_TYPE_ARM_REALM;
+    }
+    return 0;
 }
