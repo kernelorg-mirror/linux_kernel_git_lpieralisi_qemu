@@ -19,6 +19,16 @@
 #include "system/kvm.h"
 #include "system/runstate.h"
 
+/* ** TEMPORARY LOCATION BEGIN ** */
+/*
+ * The following should be in linux-headers/asm-arm64/kvm.h
+ * when support for Realm guests has landed in mainline Linux.
+ */
+#if !defined(KVM_ARM_VCPU_REC)
+#define KVM_ARM_VCPU_REC        9 /* VCPU REC state as part of Realm */
+#endif
+/* ** TEMPORARY LOCATION ENDS ** */
+
 #define TYPE_RME_GUEST "rme-guest"
 OBJECT_DECLARE_SIMPLE_TYPE(RmeGuest, RME_GUEST)
 
@@ -84,4 +94,14 @@ int kvm_arm_rme_init(MachineState *ms)
     cgs->require_guest_memfd = true;
     cgs->ready = true;
     return 0;
+}
+
+void kvm_arm_rme_vcpu_init(ARMCPU *cpu)
+{
+    if (!rme_guest) {
+        return;
+    }
+
+    cpu->kvm_rme = true;
+    cpu->kvm_init_features[0] |= (1 << KVM_ARM_VCPU_REC);
 }
