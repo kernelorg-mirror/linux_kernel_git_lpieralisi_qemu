@@ -143,6 +143,14 @@ void kvm_arm_set_cpu_features_from_host(ARMCPU *cpu);
 void kvm_arm_add_vcpu_properties(ARMCPU *cpu);
 
 /**
+ * @cpu: The CPU object to finalize
+ * @feature: a KVM_ARM_VCPU_* feature
+ *
+ * Finalize the configuration of the given vcpu feature.
+ */
+int kvm_arm_vcpu_finalize(ARMCPU *cpu, int feature);
+
+/**
  * kvm_arm_steal_time_finalize:
  * @cpu: ARMCPU for which to finalize kvm-steal-time
  * @errp: Pointer to Error* for error propagation
