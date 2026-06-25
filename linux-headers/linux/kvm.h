@@ -695,7 +695,7 @@ struct kvm_enable_cap {
 	((x) & KVM_VM_TYPE_ARM_IPA_SIZE_MASK)
 
 #define KVM_VM_TYPE_ARM_PROTECTED	(1UL << 31)
-#define KVM_VM_TYPE_ARM_MASK		(KVM_VM_TYPE_ARM_IPA_SIZE_MASK | \
+//#define KVM_VM_TYPE_ARM_MASK		(KVM_VM_TYPE_ARM_IPA_SIZE_MASK | \
 					 KVM_VM_TYPE_ARM_PROTECTED)
 
 /*
@@ -985,7 +985,8 @@ struct kvm_enable_cap {
 #define KVM_CAP_S390_USER_OPEREXEC 246
 #define KVM_CAP_S390_KEYOP 247
 #define KVM_CAP_S390_VSIE_ESAMODE 248
-#define KVM_CAP_GUEST_MEMFD_MEMORY_ATTRIBUTES 249
+#define KVM_CAP_GUEST_MEMFD_MEMORY_ATTRIBUTES 250
+#define KVM_CAP_ARM_RMI 251
 
 struct kvm_irq_routing_irqchip {
 	__u32 irqchip;

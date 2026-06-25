@@ -214,4 +214,11 @@ static inline int confidential_guest_kvm_reset(ConfidentialGuestSupport *cgs,
     return 0;
 }
 
+#if 0
+bool
+cgs_get_convert_in_place(Object *obj, Error **errp);
+
+void
+cgs_set_convert_in_place(Object *obj, bool value, Error **errp);
+#endif
 #endif /* QEMU_CONFIDENTIAL_GUEST_SUPPORT_H */

@@ -93,6 +93,7 @@ static void confidential_guest_support_init(Object *obj)
     object_property_add_bool(obj, "convert-in-place", cgs_get_convert_in_place,
                              cgs_set_convert_in_place);
 
+    fprintf(stderr, "DEBUG: Initializing CGS object at %p\n", (void*)cgs);
     cgs->convert_in_place = false;
     cgs->allow_convert_in_place = false;
 }

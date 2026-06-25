@@ -1279,11 +1279,11 @@ static void rom_reset(void *unused)
             memcpy(host, rom->data, rom->datasize);
             memset(host + rom->datasize, 0, rom->romsize - rom->datasize);
         } else {
-            address_space_write_rom(rom->as, rom->addr, MEMTXATTRS_UNSPECIFIED,
-                                    rom->data, rom->datasize);
-            address_space_set(rom->as, rom->addr + rom->datasize, 0,
-                              rom->romsize - rom->datasize,
-                              MEMTXATTRS_UNSPECIFIED);
+	    address_space_write_rom(rom->as, rom->addr, MEMTXATTRS_UNSPECIFIED,
+				    rom->data, rom->datasize);
+	    address_space_set(rom->as, rom->addr + rom->datasize, 0,
+			      rom->romsize - rom->datasize,
+			      MEMTXATTRS_UNSPECIFIED);
         }
         if (rom->isrom) {
             /* rom needs to be written only once */
@@ -1302,7 +1302,7 @@ static void rom_reset(void *unused)
         notify = (RomLoaderNotifyData) {
             .addr = rom->addr,
             .len = rom->datasize,
-            .as = rom->as,
+            .data = rom->data,
         };
         notifier_list_notify(&rom_loader_notifier, &notify);
     }

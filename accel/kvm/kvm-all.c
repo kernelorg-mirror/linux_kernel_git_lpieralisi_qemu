@@ -1678,6 +1678,10 @@ static int guest_memfd_set_memory_attributes_fd(int guest_memfd, hwaddr offset,
         error_report("failed to set memory (0x%" HWADDR_PRIx "+0x%" PRIx64 ") "
                      "with attr 0x%" PRIx64 " error '%s'",
                      offset, size, attr, strerror(-r));
+    } else {
+        error_report("set memory (0x%" HWADDR_PRIx "+0x%" PRIx64 ") "
+                     "with attr 0x%" PRIx64 " error '%s'",
+                     offset, size, attr, strerror(-r));
     }
     return r;
 }
@@ -3619,17 +3623,20 @@ static int kvm_post_convert_section(MemoryRegionSection *section, bool to_privat
         }
     }
 
+    if (current_machine->cgs && current_machine->cgs->convert_in_place)
+	return 0;
+
     if (to_private) {
-        if (rb->page_size != qemu_real_host_page_size()) {
-            /*
-             * shared memory is backed by hugetlb, which is supposed to be
-             * pre-allocated and doesn't need to be discarded
-             */
-            return 0;
-        }
-        ret = ram_block_discard_range(rb, offset, size);
+	if (rb->page_size != qemu_real_host_page_size()) {
+	    /*
+	     * shared memory is backed by hugetlb, which is supposed to be
+	     * pre-allocated and doesn't need to be discarded
+	     */
+	    return 0;
+	}
+	ret = ram_block_discard_range(rb, offset, size);
     } else {
-        ret = ram_block_discard_guest_memfd_range(rb, offset, size);
+	ret = ram_block_discard_guest_memfd_range(rb, offset, size);
     }
 
     return 0;

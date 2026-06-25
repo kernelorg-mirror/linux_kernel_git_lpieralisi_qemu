@@ -1217,6 +1217,18 @@
             '*node-affinity': ['uint16'] } }
 
 ##
+# @RmeGuestProperties:
+#
+# Properties for rme-guest objects.
+#
+# Since: 10.0
+##
+{ 'struct': 'RmeGuestProperties',
+  'base': 'ConfidentialGuestSupportProperties',
+  'data': {} }
+
+##
+
 # @ObjectType:
 #
 # Features:
@@ -1352,6 +1364,7 @@
       'pr-manager-helper':          { 'type': 'PrManagerHelperProperties',
                                       'if': 'CONFIG_LINUX' },
       'qtest':                      'QtestProperties',
+      'rme-guest':                  'RmeGuestProperties',
       'rng-builtin':                'RngProperties',
       'rng-egd':                    'RngEgdProperties',
       'rng-random':                 { 'type': 'RngRandomProperties',

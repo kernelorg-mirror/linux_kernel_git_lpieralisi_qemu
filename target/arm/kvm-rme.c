@@ -16,6 +16,7 @@
 #include "migration/blocker.h"
 #include "qapi/error.h"
 #include "qemu/error-report.h"
+#include "qemu/memalign.h"
 #include "qemu/units.h"
 #include "qom/object_interfaces.h"
 #include "system/confidential-guest-support.h"
@@ -80,7 +81,7 @@ OBJECT_DEFINE_SIMPLE_TYPE(RealmDmaRegion, realm_dma_region,
 typedef struct {
     hwaddr base;
     hwaddr size;
-    AddressSpace *as;
+    uint8_t *data;
 } RmeRamRegion;
 
 struct RmeGuest {
@@ -104,20 +105,42 @@ static int rme_populate_range(const RmeRamRegion *region, bool measure,
                               Error **errp)
 {
     int ret;
-    void *host_ua;
-    hwaddr size = region->size;
+
     hwaddr base = region->base;
+    hwaddr size = region->size;
     hwaddr start = QEMU_ALIGN_DOWN(base, RME_PAGE_SIZE);
     hwaddr end = QEMU_ALIGN_UP(base + size, RME_PAGE_SIZE);
     struct kvm_arm_rmi_populate populate_args;
+    size_t aligned_size = ROUND_UP(region->size, qemu_real_host_page_size());
 
-    host_ua = address_space_map(region->as, base, &size, false,
-                                MEMTXATTRS_UNSPECIFIED);
+    ret = kvm_set_memory_attributes_private(start, end - start);
+    if (ret) {
+        error_report("RME: failed to configure initial"
+                     "private guest memory");
+        return ret;
+    }
+
+    printf("%s populating buffer\n", __func__);
+
+    /* Allocate page-aligned memory */
+    void *buffer = qemu_memalign(qemu_real_host_page_size(), aligned_size);
+
+    if (!buffer)
+	    printf("%s buffer NULL\n", __func__);
+
+    if (!region->data)
+	    printf("%s region data NULL\n", __func__);
+
+    printf("%s region size 0x%lx\n", __func__, region->size);
+    memset(buffer, 0, aligned_size);
+    memcpy(buffer, region->data, region->size);
+
+    printf("%s populated buffer\n", __func__);
 
     populate_args = (struct kvm_arm_rmi_populate) {
         .base = start,
         .size = end - start,
-        .source_uaddr = (uintptr_t)host_ua,
+        .source_uaddr = (uintptr_t)buffer,
         .flags = measure ? KVM_ARM_RMI_POPULATE_FLAGS_MEASURE : 0,
     };
 
@@ -131,7 +154,7 @@ static int rme_populate_range(const RmeRamRegion *region, bool measure,
         }
     }
 
-    address_space_unmap(region->as, host_ua, size, false, 0);
+    qemu_vfree(buffer);
 
     return ret;
 }
@@ -171,11 +194,14 @@ static void rme_guest_class_init(ObjectClass *oc, const void *data)
 
 static void rme_guest_init(Object *obj)
 {
+    ConfidentialGuestSupport *cgs = CONFIDENTIAL_GUEST_SUPPORT(obj);
     if (rme_guest) {
         error_report("a single instance of RmeGuest is supported");
         exit(1);
     }
     rme_guest = RME_GUEST(obj);
+
+    cgs->allow_convert_in_place = true;
 }
 
 static void rme_guest_finalize(Object *obj)
@@ -208,7 +234,7 @@ static void rme_rom_load_notify(Notifier *notifier, void *data)
     region = g_new0(RmeRamRegion, 1);
     region->base = rom->addr;
     region->size = rom->len;
-    region->as = rom->as;
+    region->data = rom->data;
 
     /*
      * The Realm Initial Measurement (RIM) depends on the order in which we
@@ -259,7 +285,7 @@ void kvm_arm_rme_init_guest_ram(hwaddr base, size_t size)
 
     rme_guest->init_ram.base = base;
     rme_guest->init_ram.size = size;
-    rme_guest->init_ram.as = NULL;
+    //rme_guest->init_ram.data = NULL;
 }
 
 void kvm_arm_rme_vcpu_init(ARMCPU *cpu)

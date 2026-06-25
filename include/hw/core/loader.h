@@ -347,8 +347,8 @@ typedef struct RomLoaderNotifyData {
     hwaddr addr;
     /* Length of the blob */
     size_t len;
-    /* Address space of the blob */
-    AddressSpace *as;
+    /* Blob data */
+    uint8_t *data;
 } RomLoaderNotifyData;
 
 /**
