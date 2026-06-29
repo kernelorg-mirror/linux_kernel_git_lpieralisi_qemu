@@ -22,15 +22,6 @@
 #include "system/kvm.h"
 #include "system/runstate.h"
 
-/* ** TEMPORARY LOCATION BEGIN ** */
-/*
- * The following should be in linux-headers/asm-arm64/kvm.h
- * when support for Realm guests has landed in mainline Linux.
- */
-#if !defined(KVM_ARM_VCPU_REC)
-#define KVM_ARM_VCPU_REC        9 /* VCPU REC state as part of Realm */
-#endif
-
 #if !defined(KVM_ARM_RMI_POPULATE)
 /* Available with KVM_CAP_ARM_RMI, only for VMs with KVM_VM_TYPE_ARM_REALM */
 #define KVM_ARM_RMI_POPULATE   _IOWR(KVMIO, 0xd7, struct kvm_arm_rmi_populate)
@@ -50,13 +41,13 @@ struct kvm_arm_rmi_populate {
  * On arm64, machine type can be used to request both the machine type and
  * the physical address size for the VM.
  *
- * Bits[11-8] are reserved for the ARM specific machine type.
+ * Bits[31-30] are reserved for the ARM specific machine type.
  *
  * Bits[7-0] are reserved for the guest PA size shift (i.e, log2(PA_Size)).
  * For backward compatibility, value 0 implies the default IPA size, 40bits.
  */
-#define KVM_VM_TYPE_ARM_SHIFT          8
-#define KVM_VM_TYPE_ARM_MASK           (0xfULL << KVM_VM_TYPE_ARM_SHIFT)
+#define KVM_VM_TYPE_ARM_SHIFT          30
+#define KVM_VM_TYPE_ARM_MASK           (0x3ULL << KVM_VM_TYPE_ARM_SHIFT)
 #define KVM_VM_TYPE_ARM(_type)         \
        (((_type) << KVM_VM_TYPE_ARM_SHIFT) & KVM_VM_TYPE_ARM_MASK)
 #define KVM_VM_TYPE_ARM_NORMAL         KVM_VM_TYPE_ARM(0)
@@ -278,7 +269,6 @@ void kvm_arm_rme_vcpu_init(ARMCPU *cpu)
     }
 
     cpu->kvm_rme = true;
-    cpu->kvm_init_features[0] |= (1 << KVM_ARM_VCPU_REC);
 }
 
 int kvm_arm_rme_vm_type(void)
